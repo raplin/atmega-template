@@ -1,0 +1,6 @@
+#!/bin/bash
+while :
+do
+    make && make install
+    make serialconsole
+done
