@@ -4,17 +4,29 @@
 PRG            = main
 
 #cpu target
-MCU_TARGET     = atmega168 
-AVRDUDE_TARGET = m168
 
 #your cpu freq
-HZ          = 20000000
+HZ          = 16000000
+#your program talks at this baud to the console (8n1)
+CONSOLE_BAUD= 115200
 
 
-#Your programmer 
+# EITHER
+# ardunio original via ftdi 
 PROGRAMMER     = avrisp
-PORT           = /dev/ttyUSB0
+PORT           = /dev/ttyUSB1
 AVRDUDE_BAUD  = 19200
+MCU_TARGET     = atmega168
+AVRDUDE_TARGET = m168
+
+# -- OR --
+#arduino nano via usb
+PROGRAMMER     = arduino
+AVRDUDE_BAUD  = 57600
+MCU_TARGET     = atmega328p
+AVRDUDE_TARGET = m328p
+
+
 
 OBJ            = $(PRG).o
 OPTIMIZE       = -Os
@@ -24,7 +36,7 @@ LIBS           =
 
 # You should not have to change anything below here.
 
-CC             = avr-gcc
+CC             = ./avr-gcc-col
 
 # Override is only needed by avr-lib build system.
 
@@ -97,8 +109,8 @@ install:  $(PRG).hex
 		avr-size $(PRG).elf
 	    avrdude -V -b $(AVRDUDE_BAUD) -p $(AVRDUDE_TARGET) -c $(PROGRAMMER)  -P $(PORT) -F -U flash:w:$(PRG).hex
 
-serialconsole:  $(PRG).hex
-	    python serialconsole.py $(PRG).c
+serialconsole:  
+	    python serialconsole.py $(PORT) $(CONSOLE_BAUD) $(PRG).c
 
 fuse:
 	avrdude -p $(AVRDUDE_TARGET) -c $(PROGRAMMER) -P $(PORT) -v \

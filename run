@@ -1,4 +1,6 @@
 #!/bin/bash
+#gcc output no wierd chars
+export LC_ALL=C
 while :
 do
     make && make install

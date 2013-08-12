@@ -21,19 +21,19 @@ class NonBlockingConsole(object):
             return sys.stdin.read(1)
         return False
 
-PORT="/dev/ttyUSB0"
 
 
 # Does serial IO and key commands, quits if any files written locally (e.g. src code changed)
 class MyTerminal(object):
 
-    def __init__(self,watch_files):
+    def __init__(self,port,baud,watch_files):
+        self.hex_mode=False
         self.watch_files=watch_files
         self.last_mod={}
         self.console=NonBlockingConsole()
         self.port= serial.Serial(
-            port=PORT,
-            baudrate=57600,
+            port=port,
+            baudrate=baud,
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             bytesize=serial.EIGHTBITS,
@@ -51,10 +51,13 @@ class MyTerminal(object):
         return changed
 
     def keyboard_char(self,char):
-        self.port.write(c)
+        self.port.write(char)
         echo=False
+        if char=='h':
+            self.hex_mode=~self.hex_mode
+            return
         if echo:
-            sys.stdout.write(">%s" % c)
+            sys.stdout.write(">%s" % char)
 
 
         
@@ -70,15 +73,17 @@ class MyTerminal(object):
                         return
 
                 t=self.port.read()
-                if t:
+                if len(t):
                     did=True
+                    if self.hex_mode:
+                        t="%02x " % ord(t)
                     sys.stdout.write(t)
 
                 c=self.console.get_data()
                 if c:
+                    self.keyboard_char(c)
                     if ord(c)==27:  #esc
                         return
-                    self.keyboard_char(c)
                     did=True
 
                 if not did:
@@ -88,5 +93,5 @@ class MyTerminal(object):
 
 
 
-b=MyTerminal(watch_files=sys.argv[1:])
+b=MyTerminal(port=sys.argv[1],baud=sys.argv[2],watch_files=sys.argv[3:])
 b.start()
